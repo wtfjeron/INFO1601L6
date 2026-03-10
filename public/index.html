@@ -1,24 +1,174 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width">
-    <title>repl.it</title>
-    <link href="style.css" rel="stylesheet" type="text/css" />
-  </head>
-  <body>
-    <h1>My Page</h1>
+<head>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <title>Lab 6 - Browser JavaScript</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <style>
+        /* A little extra style for the Task 2 buttons */
+        .task-buttons { margin: 20px 0; padding: 10px; background-color: #f0f0f0; border-radius: 5px; }
+        .task-buttons button { margin: 5px; }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-wrapper teal" style="padding-left: 10px;">
+            <a href="#!" class="brand-logo">Lab 6: Browser JS</a>
+        </div>
+    </nav>
 
-    <input type="button" id="alertBtn" value="alert" onclick="alertFun()"/>
-    <input type="button" value="confirm" onclick="confirmFun()"/>
-    <input type="button" value="prompt" onclick="promptFun()"/>
+    <main class="row" style="padding: 40px">
 
-    <span id="result"></span>
+        <!-- Section for Task 2: Alert, Confirm, Prompt -->
+        <div class="task-buttons">
+            <h5>Task 2: User Interaction</h5>
+            <button class="btn waves-effect waves-light" onclick="alertFun()">Alert</button>
+            <button class="btn waves-effect waves-light" onclick="confirmFun()">Confirm</button>
+            <button class="btn waves-effect waves-light" onclick="promptFun()">Prompt</button>
+        </div>
+
+        <!-- Section for Task 4 & 5: DOM Manipulation & Event Listeners -->
+        <div>
+            <h5>Task 4 & 5: DOM Manipulation & Events</h5>
+            <p>
+                <span id="result" style="display: inline-block; padding: 10px; border: 1px solid #ccc;">This is the #result span.</span>
+            </p>
+            <button id="myBtn" class="btn waves-effect waves-light red" onclick="myFun()">Click Me (onclick attr)</button>
+        </div>
+
+        <!-- Section for Task 6 & 8: AJAX and Table Rendering -->
+        <h5>Task 6 & 8: AJAX Data Fetching</h5>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Website</th>
+                </tr>
+            </thead>
+            <tbody id="result-table">
+                <!-- Data will be loaded here by JavaScript -->
+            </tbody>
+        </table>
+
+    </main>
 
     <script>
+        // ========== TASK 2: Alert, Confirm, Prompt ==========
+        function alertFun() {
+            alert("Hello from Lab 6!");
+        }
 
+        function confirmFun() {
+            let didConfirm = confirm("Are you sure about that?");
+            if (didConfirm) {
+                alert("You confirmed :)");
+            } else {
+                alert("You did not confirm :(");
+            }
+        }
+
+        function promptFun() {
+            let val = prompt("What is your name?");
+            alert(`You've entered: ${val}`);
+        }
+
+        // ========== TASK 3: Browser Object Model (BOM) ==========
+        console.log("=== BOM Info ===");
+        console.log("Cookies Enabled:", window.navigator.cookieEnabled);
+        console.log("Online:", window.navigator.onLine);
+        console.log("App Version:", navigator.appVersion);
+        console.log("User Agent:", navigator.userAgent);
+        console.log("Platform:", navigator.platform);
+        console.log("Current URL:", window.location.href);
+        console.log("Protocol:", window.location.protocol);
+        console.log("Hostname:", window.location.hostname);
+
+        // ========== TASK 4: DOM Manipulation ==========
+        const resultSpan = document.querySelector('#result');
+        if (resultSpan) { // Check if the element exists to avoid errors
+            resultSpan.innerHTML = '<h2 style="margin:0;">My Updated Span</h2>';
+            resultSpan.style.color = 'blue';
+            resultSpan.style.backgroundColor = 'lightgrey';
+        }
+
+        // ========== TASK 5: DOM Event Listeners ==========
+        function myFun() {
+            alert("myFun called via onclick attribute!");
+        }
+
+        function myFun2() {
+            console.log("myFun2 called via addEventListener");
+        }
+
+        function logEventType(event) {
+            console.log(`Event type: ${event.type}`);
+        }
+
+        let myBtn = document.querySelector("#myBtn");
+        if (myBtn) {
+            // Attach additional listener to the click event
+            myBtn.addEventListener("click", myFun2);
+
+            // Attach listeners for mouse events
+            myBtn.addEventListener("mouseover", logEventType);
+            myBtn.addEventListener("mouseout", logEventType);
+        }
+
+        // ========== TASK 6.2: Render Function drawTable() ==========
+        function drawTable(records) {
+            let resultTbody = document.querySelector('#result-table');
+            if (!resultTbody) return;
+
+            let html = '';
+            for (let record of records) {
+                // Use the correct property names from the API
+                html += `<tr>
+                    <td>${record.id || 'N/A'}</td>
+                    <td>${record.name || 'N/A'}</td>
+                    <td>${record.brewery_type || 'N/A'}</td>
+                    <td><a href="${record.website_url || '#'}" target="_blank">${record.website_url || 'N/A'}</a></td>
+                </tr>`;
+            }
+            resultTbody.innerHTML = html;
+        }
+
+        // ========== TASK 6.2 & 8: Async fetch function getData() ==========
+        async function getData(url) {
+            try {
+                let response = await fetch(url);      // 1. Send request
+                let result = await response.json();   // 2. Get JSON data
+                drawTable(result);                     // 3. Render data
+            } catch (e) {
+                console.log("Fetch error:", e);
+                // Optionally show an error message in the table
+                document.querySelector('#result-table').innerHTML = `<tr><td colspan="4">Error loading data. Check console.</td></tr>`;
+            }
+        }
+
+        // Load data for "harry" breweries when the page loads
+        getData("https://api.openbrewerydb.org/breweries/search?query=harry");
+
+        // ========== EXTRA: Understanding Object References (Task 5 in section 6) ==========
+        let myobj = { name: 'Bob', balance: 10 };
+        let obj2 = myobj; // obj2 is a reference to myobj
+        obj2.name = "Shelly";
+        console.log("After reference change:", myobj.name); // Should log "Shelly"
+
+        let obj3 = {};
+        Object.assign(obj3, myobj); // Shallow copy
+        obj3.name = 'Smith';
+        console.log("After copy:", myobj.name, obj3.name); // Should log "Shelly Smith"
+
+        // Also test with an array
+        let arr1 = [1, 2, 3];
+        let arr2 = arr1;
+        arr2.push(4);
+        console.log("Array reference:", arr1); // Should log [1, 2, 3, 4]
 
     </script>
-    <script src="script.js"></script>
-  </body>
+    <!-- Note: Scripts can also be placed here, but having them inside the body's script tag is fine -->
+</body>
 </html>
